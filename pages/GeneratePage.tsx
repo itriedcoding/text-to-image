@@ -15,6 +15,7 @@ import { Alert, AlertDescription, AlertTitle } from '../components/ui/alert';
 import { PROMPT_CATEGORIES } from '../promptSuggestions';
 import { cn } from '../utils/cn';
 import PromptVisualizer from '../components/PromptVisualizer';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const GeneratePage: React.FC = () => {
   const [prompt, setPrompt] = useState(DEFAULT_PROMPT);
@@ -30,6 +31,21 @@ const GeneratePage: React.FC = () => {
   // New: State for image editing
   const [editingImage, setEditingImage] = useState<GeneratedImage | null>(null);
   const [editPrompt, setEditPrompt] = useState('');
+
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Load image to edit from route state if present
+  useEffect(() => {
+    if (location.state && (location.state as { imageToEdit?: GeneratedImage }).imageToEdit) {
+      const imageToEdit = (location.state as { imageToEdit: GeneratedImage }).imageToEdit;
+      setEditingImage(imageToEdit);
+      setEditPrompt(`Refine the image: ${imageToEdit.prompt}`); // Pre-fill edit prompt
+      window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll to top to show editor
+      // Clear the state to avoid re-triggering on subsequent visits
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state, location.pathname, navigate]);
 
   // Generation is disabled only when loading, as API key is assumed from environment.
   const isGenerationDisabled = loading;
@@ -165,8 +181,11 @@ const GeneratePage: React.FC = () => {
   // Scroll to new images when they are generated
   useEffect(() => {
     if (generatedImages.length > 0) {
-      const firstImageElement = document.getElementById(generatedImages[0].id);
-      firstImageElement?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // Use requestAnimationFrame for smoother scroll after render
+      requestAnimationFrame(() => {
+        const firstImageElement = document.getElementById(generatedImages[0].id);
+        firstImageElement?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
     }
   }, [generatedImages]);
 

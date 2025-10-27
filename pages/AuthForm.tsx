@@ -1,0 +1,5 @@
+/*
+The AuthForm component is no longer needed.
+API key selection logic has been integrated directly into GeneratePage.
+User authentication is now handled by the new AuthPage.tsx.
+*/

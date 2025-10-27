@@ -1,4 +1,5 @@
 /*
 The AuthPage component is no longer needed.
 API key selection and authentication logic have been integrated directly into GeneratePage.
+User authentication is now handled by the new AuthPage.tsx.
 */

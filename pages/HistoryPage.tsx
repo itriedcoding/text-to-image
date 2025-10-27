@@ -34,14 +34,16 @@ const HistoryPage: React.FC = () => {
       { threshold: 0.1 }
     );
 
-    cardRefs.current.forEach((ref) => {
+    // Filter out null refs before observing
+    cardRefs.current.filter(Boolean).forEach((ref) => {
       if (ref) {
         observer.observe(ref);
       }
     });
 
     return () => {
-      cardRefs.current.forEach((ref) => {
+      // Filter out null refs before unobserving
+      cardRefs.current.filter(Boolean).forEach((ref) => {
         if (ref) {
           observer.unobserve(ref);
         }
@@ -57,11 +59,8 @@ const HistoryPage: React.FC = () => {
   };
 
   const handleEditImageFromHistory = useCallback((image: GeneratedImage) => {
-    // A simple way to pass the image to GeneratePage for editing:
-    // Store it temporarily in localStorage, then navigate.
-    // In a larger app, a global state management solution would be more robust.
-    localStorage.setItem('imageToEdit', JSON.stringify(image));
-    navigate('/generate');
+    // Navigate to GeneratePage and pass the image via route state for editing
+    navigate('/generate', { state: { imageToEdit: image } });
   }, [navigate]);
 
   return (
@@ -104,7 +103,7 @@ const HistoryPage: React.FC = () => {
             <div
               key={image.id}
               // Fixed: Ensure the ref callback returns void
-              ref={(el) => {
+              ref={(el: HTMLDivElement | null) => {
                 cardRefs.current[index] = el;
               }}
               className="opacity-0" // Start invisible for animation

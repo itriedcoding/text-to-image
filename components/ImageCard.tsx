@@ -9,11 +9,36 @@ interface ImageCardProps {
   onEdit?: (image: GeneratedImage) => void; // New: Callback for editing an image
 }
 
+// Helper to convert base64 to Blob
+const base64ToBlob = (base64: string, mimeType: string): Blob => {
+  const byteCharacters = atob(base64);
+  const byteNumbers = new Array(byteCharacters.length);
+  for (let i = 0; i < byteCharacters.length; i++) {
+    byteNumbers[i] = byteCharacters.charCodeAt(i);
+  }
+  const byteArray = new Uint8Array(byteNumbers);
+  return new Blob([byteArray], { type: mimeType });
+};
+
 const ImageCard: React.FC<ImageCardProps> = ({ image, onEdit }) => {
   const [copied, setCopied] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
   const [isHovering, setIsHovering] = useState(false);
+  const [objectUrl, setObjectUrl] = useState<string | null>(null); // New state for object URL
+
+  useEffect(() => {
+    // Generate object URL when image data changes
+    if (image.base64Data) {
+      const blob = base64ToBlob(image.base64Data, 'image/png'); // Assuming PNG from geminiService
+      const url = URL.createObjectURL(blob);
+      setObjectUrl(url);
+      // Cleanup: revoke the object URL when component unmounts or image changes
+      return () => {
+        URL.revokeObjectURL(url);
+      };
+    }
+  }, [image.base64Data]);
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (cardRef.current) {
@@ -40,22 +65,29 @@ const ImageCard: React.FC<ImageCardProps> = ({ image, onEdit }) => {
   }, [handleMouseMove]);
 
   const downloadImage = () => {
-    const link = document.createElement('a');
-    link.href = `data:image/png;base64,${image.base64Data}`;
-    link.download = `gemini-image-${image.id}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    if (objectUrl) {
+      const link = document.createElement('a');
+      link.href = objectUrl;
+      link.download = `gemini-image-${image.id}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else {
+      console.error('Object URL not available for download.');
+    }
   };
 
   const copyLink = () => {
-    // For a frontend-only app, the "random link" will be the data URI itself.
-    navigator.clipboard.writeText(`data:image/png;base64,${image.base64Data}`)
-      .then(() => {
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      })
-      .catch((err) => console.error('Failed to copy: ', err));
+    if (objectUrl) {
+      navigator.clipboard.writeText(objectUrl)
+        .then(() => {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        })
+        .catch((err) => console.error('Failed to copy: ', err));
+    } else {
+      console.error('Object URL not available for copying.');
+    }
   };
 
   const handleEditClick = () => {
@@ -72,9 +104,6 @@ const ImageCard: React.FC<ImageCardProps> = ({ image, onEdit }) => {
   }, [handleMouseMove]);
 
   return (
-    // Fixed: The Card component itself needs to be updated to accept `ref` via `React.forwardRef`.
-    // The error `Property 'ref' does not exist on type 'IntrinsicAttributes & CardProps'.` will be resolved
-    // by changing the definition of `Card` in `components/ui/card.tsx`.
     <Card
       ref={cardRef}
       className={cn(
@@ -89,7 +118,7 @@ const ImageCard: React.FC<ImageCardProps> = ({ image, onEdit }) => {
     >
       <CardContent className="flex flex-col items-center p-4">
         <img
-          src={`data:image/png;base64,${image.base64Data}`}
+          src={objectUrl || `data:image/png;base64,${image.base64Data}`} // Fallback to data URI if objectUrl not ready
           alt={image.prompt}
           className="rounded-lg max-h-64 object-contain shadow-md"
           style={{ aspectRatio: image.aspectRatio, maxWidth: '100%' }}
@@ -105,13 +134,14 @@ const ImageCard: React.FC<ImageCardProps> = ({ image, onEdit }) => {
       </CardContent>
       <CardFooter className="flex flex-col items-center justify-center space-y-3 pt-0">
         <div className="flex space-x-3 w-full justify-center">
-          <Button onClick={downloadImage} className="w-full">
+          <Button onClick={downloadImage} className="w-full" disabled={!objectUrl}>
             Download
           </Button>
           <Button
             onClick={copyLink}
             variant={copied ? 'secondary' : 'default'}
             className={cn("w-full", copied ? 'bg-green-500 hover:bg-green-600 text-white' : '')}
+            disabled={!objectUrl}
           >
             {copied ? 'Copied!' : 'Copy Link'}
           </Button>
