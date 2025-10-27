@@ -1,0 +1,4 @@
+/*
+The AuthPage component is no longer needed.
+API key selection and authentication logic have been integrated directly into GeneratePage.
+*/

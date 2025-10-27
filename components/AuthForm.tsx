@@ -1,0 +1,4 @@
+/*
+The AuthForm component is no longer needed.
+API key selection logic has been integrated directly into GeneratePage.
+*/
