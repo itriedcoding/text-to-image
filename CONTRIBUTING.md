@@ -6,7 +6,7 @@ We're thrilled you're interested in contributing to Gemini AI ImageCrafter! Your
 
 ## 👨‍💻 How to Contribute
 
-There are several ways to contribute to this project:
+Thereutable ways to contribute to this project:
 
 1.  **Report Bugs:** If you find a bug, please open an issue on GitHub.
 2.  **Suggest Features:** Have an idea for a new feature or improvement? Open an issue to discuss it.
@@ -63,13 +63,23 @@ Ready to dive into the code? Here's how to get started:
     npm install
     # or yarn install
     ```
-4.  **Run the Application:** As this is a client-side ES module application, you can serve it with a static server:
+4.  **Configure Google Gemini API Key:**
+    The application expects your Google Gemini API Key to be available as an environment variable named `API_KEY`. You will need to set this environment variable before running the development server.
+    
+    **Example (Linux/macOS):**
+    ```bash
+    export API_KEY="YOUR_GEMINI_API_KEY"
+    npx serve .
+    ```
+    (Replace `"YOUR_GEMINI_API_KEY"` with your actual key.)
+
+5.  **Run the Application:** As this is a client-side ES module application, you can serve it with a static server:
     ```bash
     npx serve .
     # or http-server . if you have it installed globally
     ```
     Then, open your browser to `http://localhost:5000` (or the port reported by the server).
-5.  **Create a New Branch:**
+6.  **Create a New Branch:**
     ```bash
     git checkout -b feature/your-feature-name
     # or bugfix/your-bugfix-name

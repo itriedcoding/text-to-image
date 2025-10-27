@@ -20,7 +20,7 @@ This project is open-sourced to foster community contributions and collective in
 *   **Generation History:** Automatically save and browse all your generated images, complete with their original prompts and settings.
 *   **Image Management:** Download generated images, copy direct data URIs, and clear your history with ease.
 *   **Intuitive UI/UX:** A modern, responsive interface built with React and Tailwind CSS, featuring subtle animations and smooth interactions.
-*   **Google Gemini API Key Integration:** Securely manage your API key directly through the AI Studio platform, ensuring a seamless and compliant user experience.
+*   **Google Gemini API Key:** The application expects the Google Gemini API key to be provided securely via `process.env.API_KEY` in the execution environment.
 
 ---
 
@@ -32,6 +32,7 @@ Follow these steps to set up and run Gemini AI ImageCrafter on your local machin
 
 *   **Node.js & npm:** Ensure you have Node.js (which includes npm) installed. You can download it from [nodejs.org](https://nodejs.org/).
     *   Verify installation: `node -v` and `npm -v`
+*   **Google Gemini API Key:** You will need an API key from Google AI Studio. This key must be made available to the application via an environment variable.
 
 ### Local Development Setup
 
@@ -48,44 +49,55 @@ Follow these steps to set up and run Gemini AI ImageCrafter on your local machin
     # yarn install
     ```
 
-3.  **Run the Application:**
+3.  **Configure Google Gemini API Key:**
+    The application expects your Google Gemini API Key to be available as an environment variable named `API_KEY`. How you set this depends on your development environment or deployment method.
+
+    *   **When running locally with `npx serve` or `http-server`:** You will need to set the `API_KEY` environment variable before starting the server.
+        **Example (Linux/macOS):**
+        ```bash
+        export API_KEY="YOUR_GEMINI_API_KEY"
+        npx serve .
+        ```
+        **Example (Windows Command Prompt):**
+        ```bash
+        set API_KEY="YOUR_GEMINI_API_KEY"
+        npx serve .
+        ```
+        **Example (Windows PowerShell):**
+        ```bash
+        $env:API_KEY="YOUR_GEMINI_API_KEY"
+        npx serve .
+        ```
+        Replace `"YOUR_GEMINI_API_KEY"` with your actual key obtained from Google AI Studio.
+
+    *   **Important:** Ensure your selected API key has billing enabled. The `imagen-4.0-generate-001` model is a paid service. Without billing, API calls will fail.
+        *   [Google Gemini API Billing Information](https://ai.google.dev/gemini-api/docs/billing)
+
+4.  **Run the Application:**
     This application is designed to run in a browser environment that automatically transpiles and resolves ES modules, as demonstrated by the `index.html`'s `type="module"` script and `importmap`.
-    
+
     You can serve the application using a simple static file server.
-    
-    Using `npx serve`:
+
+    Using `npx serve` (after setting API_KEY):
     ```bash
     npx serve .
     ```
     (If `serve` is not installed globally, `npx` will download and run it.)
-    
+
     Alternatively, if you have a different static server (e.g., `http-server`):
     ```bash
     npm install -g http-server
     http-server .
     ```
-    
+
     After running the server, open your web browser and navigate to `http://localhost:5000` (or the port indicated by your server).
-
-### Google Gemini API Key Configuration
-
-This application integrates with the AI Studio platform's API key management system.
-
-1.  **No `.env` file needed:** You do **NOT** need to create a `.env` file or manually paste your API key into the code. The `process.env.API_KEY` is dynamically populated by the runtime environment after you select your key via the platform's UI.
-
-2.  **On the "Generate" Page:** When you navigate to the "Generate" page for the first time, or if your key becomes invalid, the application will prompt you to "Select Google Gemini API Key".
-
-3.  **Select Your Key:** Click this button. A dialog provided by the AI Studio platform will appear, allowing you to choose an existing API key or create a new one.
-
-4.  **Enable Billing:** Ensure that your selected API key has billing enabled. The `imagen-4.0-generate-001` model is a paid service. Without billing, API calls will fail. A link to Google's billing information is provided in the application's API key selection prompt.
-    *   [Google Gemini API Billing Information](https://ai.google.dev/gemini-api/docs/billing)
 
 ---
 
 ## 💡 Usage
 
-1.  **Navigate to the "Generate" page.**
-2.  **Select API Key:** If prompted, select your Google Gemini API key.
+1.  **Ensure API Key is Set:** Before running, make sure your `API_KEY` environment variable is configured.
+2.  **Navigate to the "Generate" page.**
 3.  **Enter a Prompt:** Describe the image you want to create in the "Prompt" textarea. Use the "Prompt Builder" to get suggestions and enhance your descriptions.
 4.  **Configure Options:**
     *   Adjust the "Number of Images" to generate multiple results.

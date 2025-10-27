@@ -1,20 +1,20 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { generateImagesWithGemini } from '../services/geminiService'; // ensureApiKeySelected is implicitly handled by prompt
+import { generateImagesWithGemini } from '../services/geminiService';
 import { GeneratedImage, ImageAspectRatio } from '../types';
-import { IMAGE_HISTORY_STORAGE_KEY, DEFAULT_PROMPT, DEFAULT_NUMBER_OF_IMAGES, DEFAULT_ASPECT_RATIO, MAX_IMAGES_TO_GENERATE, DEFAULT_SEED } from '../constants';
+import { IMAGE_HISTORY_STORAGE_KEY, DEFAULT_PROMPT, DEFAULT_NUMBER_OF_IMAGES, DEFAULT_ASPECT_RATIO, MAX_IMAGES_TO_GENERATE } from '../constants';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ImageCard from '../components/ImageCard';
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '../components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
 import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { Input } from '../components/ui/input';
 import { Select } from '../components/ui/select';
 import { Button } from '../components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '../components/ui/alert';
-import { PROMPT_CATEGORIES } from '../promptSuggestions'; // Import prompt suggestions
-import { cn } from '../utils/cn'; // Import cn utility
-import PromptVisualizer from '../components/PromptVisualizer'; // Import the new PromptVisualizer
+import { PROMPT_CATEGORIES } from '../promptSuggestions';
+import { cn } from '../utils/cn';
+import PromptVisualizer from '../components/PromptVisualizer';
 
 const GeneratePage: React.FC = () => {
   const [prompt, setPrompt] = useState(DEFAULT_PROMPT);
@@ -26,57 +26,9 @@ const GeneratePage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPromptBuilder, setShowPromptBuilder] = useState(false); // State for prompt builder visibility
-  const [apiKeyStatus, setApiKeyStatus] = useState<'checking' | 'selected' | 'not-selected'>('checking');
 
-
-  // --- API Key Management Logic ---
-  useEffect(() => {
-    const checkInitialApiKey = async () => {
-      if (typeof window.aistudio === 'undefined' || !window.aistudio.hasSelectedApiKey) {
-        console.warn('window.aistudio API not available. Assuming API_KEY is NOT set via environment variable.');
-        setApiKeyStatus('not-selected'); // Assume not selected if platform API is missing
-        return;
-      }
-      try {
-        const hasKey = await window.aistudio.hasSelectedApiKey();
-        setApiKeyStatus(hasKey ? 'selected' : 'not-selected');
-      } catch (err) {
-        console.error("Error checking API key status:", err);
-        setApiKeyStatus('not-selected');
-        setError("Failed to check API key status. Please try again.");
-      }
-    };
-    checkInitialApiKey();
-  }, []);
-
-  const handleSelectApiKey = async () => {
-    setApiKeyStatus('checking'); // Indicate that selection process is starting
-    setError(null); // Clear any previous errors
-
-    try {
-      if (typeof window.aistudio === 'undefined' || !window.aistudio.openSelectKey) {
-        setError("AI Studio platform API not available. Cannot select API key.");
-        setApiKeyStatus('not-selected');
-        return;
-      }
-      await window.aistudio.openSelectKey();
-      // After selection attempt, re-check status
-      const hasKey = await window.aistudio.hasSelectedApiKey();
-      setApiKeyStatus(hasKey ? 'selected' : 'not-selected');
-      if (!hasKey) {
-        setError("API key selection was cancelled or failed. Please try again.");
-      } else {
-        setError(null); // Clear any previous errors if key is now selected
-      }
-    } catch (err: any) {
-      setError(`Failed to select API key: ${err.message || 'Unknown error'}`);
-      setApiKeyStatus('not-selected');
-    }
-  };
-
-  const isGenerationDisabled = loading || apiKeyStatus !== 'selected';
-  // --- End API Key Management Logic ---
-
+  // Generation is disabled only when loading, as API key is assumed from environment.
+  const isGenerationDisabled = loading;
 
   const saveToHistory = useCallback((newImages: GeneratedImage[]) => {
     const historyString = localStorage.getItem(IMAGE_HISTORY_STORAGE_KEY);
@@ -111,11 +63,6 @@ const GeneratePage: React.FC = () => {
     setGeneratedImages([]); // Clear previous results
 
     try {
-      // The `generateImagesWithGemini` function already handles `ensureApiKeySelected` internally
-      // and will prompt the user if the key is missing or invalid.
-      // We should optimistically set apiKeyStatus to 'selected' if an error from `generateImagesWithGemini`
-      // isn't related to API key, or to 'not-selected' if it is.
-
       const cleanedPrompt = prompt.trim().replace(/,\s*$/, '').trim(); // Remove trailing comma and whitespace
 
       if (!cleanedPrompt) {
@@ -126,9 +73,6 @@ const GeneratePage: React.FC = () => {
 
       const base64Images = await generateImagesWithGemini({
         prompt: cleanedPrompt,
-        // negativePrompt is not supported by 'imagen-4.0-generate-001'
-        // We could theoretically append it to the prompt if the model was more flexible,
-        // but it's best to keep it explicit for future model updates.
         numberOfImages,
         aspectRatio,
         seed: seed !== undefined ? Number(seed) : undefined, // Pass seed if provided
@@ -147,17 +91,10 @@ const GeneratePage: React.FC = () => {
 
       setGeneratedImages(newGeneratedImages);
       saveToHistory(newGeneratedImages);
-      setApiKeyStatus('selected'); // If generation was successful, API key is active.
 
     } catch (err: any) {
       console.error("Generation error:", err);
-      // If the error indicates API key issue, set status to not-selected
-      if (err.message && err.message.includes("API key invalid or not found")) {
-        setApiKeyStatus('not-selected');
-        setError("API key invalid or not found. Please select your API key again.");
-      } else {
-        setError(err.message || 'Failed to generate images. Please try again.');
-      }
+      setError(err.message || 'Failed to generate images. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -179,52 +116,6 @@ const GeneratePage: React.FC = () => {
       <h1 className="text-4xl font-extrabold text-blue-900 mb-8 text-center bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-800">
         Generate New Images
       </h1>
-
-      {/* API Key Status & Management Card */}
-      {apiKeyStatus === 'checking' && (
-        <Alert className="mb-6 flex items-center justify-center bg-blue-50 text-blue-800 border-blue-200 shadow-md">
-          <LoadingSpinner />
-          <AlertDescription className="ml-4 text-base font-semibold">Checking Google Gemini API Key status...</AlertDescription>
-        </Alert>
-      )}
-
-      {apiKeyStatus === 'not-selected' && (
-        <Card className="mb-10 p-4 border-red-300 bg-red-50 text-red-800 shadow-lg animate-fade-in-up">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-red-700 text-3xl">Google Gemini API Key Required</CardTitle>
-            <CardDescription className="text-red-600 text-base mt-2">
-              To unleash your creativity with AI image generation, you need to select your Google Gemini API Key.
-              <br /><br />
-              Please note:
-              <ul className="list-disc list-inside ml-4 mt-2 space-y-1">
-                <li>Direct API key input is not supported due to platform security guidelines.</li>
-                <li>This application is currently focused on the Google Gemini API. Integration with other APIs like OpenAI is not supported at this time.</li>
-              </ul>
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col items-center pt-0">
-            <Button onClick={handleSelectApiKey} className="mb-4 bg-red-600 hover:bg-red-700 text-white text-lg py-3 px-8 rounded-full shadow-lg">
-              Select Google Gemini API Key
-            </Button>
-            <p className="text-sm text-red-600 text-center">
-              Please ensure your selected API key has billing enabled to prevent service interruptions.
-              <br />
-              <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" rel="noopener noreferrer" className="text-red-800 hover:underline font-medium">
-                Billing Information
-              </a>
-            </p>
-          </CardContent>
-        </Card>
-      )}
-
-      {apiKeyStatus === 'selected' && !error && (
-        <Alert className="mb-6 bg-green-50 text-green-800 border-green-200 shadow-md animate-fade-in-up">
-          <AlertTitle className="text-green-700">API Key Active!</AlertTitle>
-          <AlertDescription className="text-base">
-            Google Gemini API Key is successfully selected. You are ready to create!
-          </AlertDescription>
-        </Alert>
-      )}
 
       <Card className="mb-12 p-0">
         <CardHeader className="pb-4">
