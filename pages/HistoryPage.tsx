@@ -1,13 +1,15 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { GeneratedImage } from '../types';
 import { IMAGE_HISTORY_STORAGE_KEY } from '../constants';
 import ImageCard from '../components/ImageCard';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
+import { useNavigate } from 'react-router-dom';
 
 const HistoryPage: React.FC = () => {
   const [history, setHistory] = useState<GeneratedImage[]>([]);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const storedHistory = localStorage.getItem(IMAGE_HISTORY_STORAGE_KEY);
@@ -53,6 +55,14 @@ const HistoryPage: React.FC = () => {
       setHistory([]);
     }
   };
+
+  const handleEditImageFromHistory = useCallback((image: GeneratedImage) => {
+    // A simple way to pass the image to GeneratePage for editing:
+    // Store it temporarily in localStorage, then navigate.
+    // In a larger app, a global state management solution would be more robust.
+    localStorage.setItem('imageToEdit', JSON.stringify(image));
+    navigate('/generate');
+  }, [navigate]);
 
   return (
     <div className="container mx-auto px-6 py-8 pt-28">
@@ -100,7 +110,7 @@ const HistoryPage: React.FC = () => {
               className="opacity-0" // Start invisible for animation
               style={{ animationDelay: `${index * 0.1}s` }} // Staggered animation
             >
-              <ImageCard image={image} />
+              <ImageCard image={image} onEdit={handleEditImageFromHistory} />
             </div>
           ))}
         </div>

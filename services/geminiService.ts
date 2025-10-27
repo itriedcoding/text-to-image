@@ -1,5 +1,5 @@
-import { GoogleGenAI } from "@google/genai";
-import { GenerateImageConfig } from '../types';
+import { GoogleGenAI, Modality } from "@google/genai";
+import { GenerateImageConfig, EditedImageConfig } from '../types';
 
 /**
  * Generates images using the Gemini `imagen-4.0-generate-001` model.
@@ -38,5 +38,47 @@ export const generateImagesWithGemini = async (config: GenerateImageConfig): Pro
   } catch (error: any) {
     console.error("Error generating image:", error);
     throw new Error(`Failed to generate images: ${error.message || 'Unknown error'}`);
+  }
+};
+
+/**
+ * Edits an image using the Gemini `gemini-2.5-flash-image` model.
+ * @param {EditedImageConfig} config - Configuration for image editing.
+ * @returns {Promise<string>} A base64 encoded string of the edited image.
+ * @throws {Error} If image editing fails.
+ */
+export const editImageWithGemini = async (config: EditedImageConfig): Promise<string> => {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash-image', // Model for image editing
+      contents: {
+        parts: [
+          {
+            inlineData: {
+              data: config.sourceImageBase64,
+              mimeType: config.sourceImageMimeType,
+            },
+          },
+          {
+            text: config.prompt, // The prompt for editing
+          },
+        ],
+      },
+      config: {
+        responseModalities: [Modality.IMAGE],
+      },
+    });
+
+    const editedImagePart = response.candidates?.[0]?.content?.parts?.[0];
+    if (editedImagePart?.inlineData?.data) {
+      return editedImagePart.inlineData.data;
+    } else {
+      throw new Error('No edited image generated or invalid response structure.');
+    }
+  } catch (error: any) {
+    console.error("Error editing image:", error);
+    throw new Error(`Failed to edit image: ${error.message || 'Unknown error'}`);
   }
 };

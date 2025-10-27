@@ -1,11 +1,11 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { generateImagesWithGemini } from '../services/geminiService';
+import { generateImagesWithGemini, editImageWithGemini } from '../services/geminiService';
 import { GeneratedImage, ImageAspectRatio } from '../types';
 import { IMAGE_HISTORY_STORAGE_KEY, DEFAULT_PROMPT, DEFAULT_NUMBER_OF_IMAGES, DEFAULT_ASPECT_RATIO, MAX_IMAGES_TO_GENERATE } from '../constants';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ImageCard from '../components/ImageCard';
-import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent, CardFooter, CardDescription } from '../components/ui/card';
 import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { Input } from '../components/ui/input';
@@ -26,6 +26,10 @@ const GeneratePage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPromptBuilder, setShowPromptBuilder] = useState(false); // State for prompt builder visibility
+
+  // New: State for image editing
+  const [editingImage, setEditingImage] = useState<GeneratedImage | null>(null);
+  const [editPrompt, setEditPrompt] = useState('');
 
   // Generation is disabled only when loading, as API key is assumed from environment.
   const isGenerationDisabled = loading;
@@ -100,6 +104,64 @@ const GeneratePage: React.FC = () => {
     }
   }, [prompt, negativePrompt, numberOfImages, aspectRatio, seed, saveToHistory]);
 
+
+  const handleEditImage = useCallback((image: GeneratedImage) => {
+    setEditingImage(image);
+    setEditPrompt(`Refine the image: ${image.prompt}`); // Pre-fill edit prompt
+    window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll to top to show editor
+  }, []);
+
+  const handleApplyEdit = useCallback(async () => {
+    if (!editingImage || !editPrompt.trim()) {
+      setError("Please provide a prompt for editing.");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const editedBase64 = await editImageWithGemini({
+        prompt: editPrompt.trim(),
+        sourceImageBase64: editingImage.base64Data,
+        sourceImageMimeType: 'image/png', // Assuming all generated images are PNG
+      });
+
+      const newEditedImage: GeneratedImage = {
+        id: uuidv4(),
+        prompt: editPrompt.trim(),
+        negativePrompt: editingImage.negativePrompt, // Carry over negative prompt
+        numberOfImages: 1, // Edited image is always one
+        aspectRatio: editingImage.aspectRatio, // Maintain original aspect ratio
+        base64Data: editedBase64,
+        timestamp: new Date().toISOString(),
+        seed: editingImage.seed, // Carry over seed if applicable
+        sourceImageId: editingImage.id, // Reference to the original image
+      };
+
+      // Add the new edited image to the beginning of the generated images list
+      setGeneratedImages(prev => [newEditedImage, ...prev]);
+      saveToHistory([newEditedImage]);
+
+      setEditingImage(null); // Clear editing state
+      setEditPrompt(''); // Clear edit prompt
+      setPrompt(DEFAULT_PROMPT); // Reset main prompt for new generations
+
+    } catch (err: any) {
+      console.error("Editing error:", err);
+      setError(err.message || 'Failed to edit image. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }, [editingImage, editPrompt, saveToHistory]);
+
+  const handleCancelEdit = useCallback(() => {
+    setEditingImage(null);
+    setEditPrompt('');
+    setError(null);
+  }, []);
+
+
   // Scroll to new images when they are generated
   useEffect(() => {
     if (generatedImages.length > 0) {
@@ -116,6 +178,67 @@ const GeneratePage: React.FC = () => {
       <h1 className="text-4xl font-extrabold text-blue-900 mb-8 text-center bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-800">
         Generate New Images
       </h1>
+
+      {editingImage && (
+        <Card className="mb-12 p-0 border-purple-300 shadow-xl bg-purple-50/50">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-purple-800">Edit Image</CardTitle>
+            <CardDescription className="text-purple-700">Refine or transform an existing image.</CardDescription>
+          </CardHeader>
+          <CardContent className="pt-0 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="flex flex-col items-center justify-center p-4 bg-white/70 rounded-lg shadow-inner">
+              <Label className="mb-2 text-purple-900 font-semibold">Original Image:</Label>
+              <img
+                src={`data:image/png;base64,${editingImage.base64Data}`}
+                alt="Image to edit"
+                className="rounded-lg max-h-48 object-contain shadow-md"
+                style={{ aspectRatio: editingImage.aspectRatio, maxWidth: '100%' }}
+              />
+              <p className="text-sm text-center text-purple-800 mt-2 line-clamp-2">{editingImage.prompt}</p>
+            </div>
+            <div className="flex flex-col gap-4">
+              <Label htmlFor="editPrompt" className="mb-1 text-purple-900">
+                New Prompt for Editing <span className="text-sm text-purple-600">(What changes do you want?)</span>
+              </Label>
+              <Textarea
+                id="editPrompt"
+                value={editPrompt}
+                onChange={(e) => setEditPrompt(e.target.value)}
+                placeholder="e.g., add a red hat, change the background to a snowy forest, make it an oil painting"
+                rows={4}
+                required
+                className="resize-y border-purple-400 focus-visible:ring-purple-500"
+                disabled={isGenerationDisabled}
+              />
+              <div className="flex space-x-3 mt-4">
+                <Button
+                  onClick={handleApplyEdit}
+                  className="w-full py-3 text-lg bg-gradient-to-r from-purple-600 to-indigo-700 hover:from-purple-700 hover:to-indigo-800"
+                  disabled={isGenerationDisabled || !editPrompt.trim()}
+                >
+                  {loading ? (
+                    <>
+                      <LoadingSpinner />
+                      <span className="ml-3">Applying Edit...</span>
+                    </>
+                  ) : (
+                    'Apply Edit'
+                  )}
+                </Button>
+                <Button
+                  onClick={handleCancelEdit}
+                  variant="outline"
+                  className="w-full py-3 text-lg border-purple-400 text-purple-800 hover:bg-purple-100"
+                  disabled={isGenerationDisabled}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
 
       <Card className="mb-12 p-0">
         <CardHeader className="pb-4">
@@ -296,7 +419,7 @@ const GeneratePage: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {generatedImages.map((img) => (
               <div key={img.id} id={img.id} className="animate-fade-in-up">
-                <ImageCard image={img} />
+                <ImageCard image={img} onEdit={handleEditImage} />
               </div>
             ))}
           </div>

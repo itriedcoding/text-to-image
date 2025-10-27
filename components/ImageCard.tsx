@@ -6,9 +6,10 @@ import { cn } from '../utils/cn';
 
 interface ImageCardProps {
   image: GeneratedImage;
+  onEdit?: (image: GeneratedImage) => void; // New: Callback for editing an image
 }
 
-const ImageCard: React.FC<ImageCardProps> = ({ image }) => {
+const ImageCard: React.FC<ImageCardProps> = ({ image, onEdit }) => {
   const [copied, setCopied] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
@@ -57,6 +58,12 @@ const ImageCard: React.FC<ImageCardProps> = ({ image }) => {
       .catch((err) => console.error('Failed to copy: ', err));
   };
 
+  const handleEditClick = () => {
+    if (onEdit) {
+      onEdit(image);
+    }
+  };
+
   useEffect(() => {
     // Cleanup on unmount
     return () => {
@@ -90,6 +97,11 @@ const ImageCard: React.FC<ImageCardProps> = ({ image }) => {
         <p className="text-center text-blue-900 font-semibold text-sm line-clamp-2 min-h-[2.5em] mt-4">
           {image.prompt}
         </p>
+        {image.sourceImageId && (
+          <p className="text-xs text-blue-600 italic mt-1">
+            (Edited from previous generation)
+          </p>
+        )}
       </CardContent>
       <CardFooter className="flex flex-col items-center justify-center space-y-3 pt-0">
         <div className="flex space-x-3 w-full justify-center">
@@ -104,6 +116,18 @@ const ImageCard: React.FC<ImageCardProps> = ({ image }) => {
             {copied ? 'Copied!' : 'Copy Link'}
           </Button>
         </div>
+        {onEdit && (
+          <Button
+            onClick={handleEditClick}
+            variant="outline"
+            className="w-full mt-2 flex items-center justify-center"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            Edit Image
+          </Button>
+        )}
         <p className="text-xs text-blue-700 mt-2">
           Generated: {new Date(image.timestamp).toLocaleString()}
           {image.seed !== undefined && <span className="ml-2">(Seed: {image.seed})</span>}
