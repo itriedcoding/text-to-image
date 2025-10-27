@@ -11,6 +11,8 @@ This project is open-sourced to foster community contributions and collective in
 ## ✨ Features
 
 *   **Text-to-Image Generation:** Convert descriptive text prompts into high-quality images using the `imagen-4.0-generate-001` model.
+*   **Advanced Image Editing:** Take any previously generated image and apply new prompts to modify it, leveraging a specialized image editing model (`gemini-2.5-flash-image`). This allows for dynamic refinement, transformation, and artistic manipulation of your creations.
+*   **Desktop Installability (PWA):** Install the application directly to your desktop (Windows, macOS, Linux) for a native app-like experience. Enjoy offline access and a dedicated window, enhancing usability and accessibility.
 *   **Advanced Prompt Builder:** Utilize categorized keyword suggestions to enhance and refine your prompts, guiding the AI to generate precise visuals.
 *   **Configurable Settings:**
     *   **Number of Images:** Generate multiple variations (up to 4) from a single prompt.
@@ -75,6 +77,7 @@ Follow these steps to set up and run Gemini AI ImageCrafter on your local machin
 
 4.  **Run the Application:**
     This application is designed to run in a browser environment that automatically transpiles and resolves ES modules, as demonstrated by the `index.html`'s `type="module"` script and `importmap`.
+    It is also a Progressive Web App (PWA), which means you can install it to your desktop for a native-like experience and offline functionality after visiting the URL.
 
     You can serve the application using a simple static file server.
 
@@ -105,7 +108,9 @@ Follow these steps to set up and run Gemini AI ImageCrafter on your local machin
     *   Optionally, enter a "Seed" for reproducible results.
 5.  **Generate:** Click the "Generate Images" button.
 6.  **View Results:** Your generated images will appear below the controls. You can download them or copy their links.
-7.  **History:** All your generated images are saved to local storage and can be viewed on the "History" page.
+7.  **Edit Images:** Click the "Edit Image" button on any generated image to open the editing interface. Provide a new prompt to transform the selected image.
+8.  **History:** All your generated and edited images are saved to local storage and can be viewed on the "History" page.
+9.  **Install to Desktop (PWA):** Most modern browsers will offer an "Install App" option in their address bar or menu. Click this to install Gemini AI ImageCrafter as a desktop application.
 
 ---
 

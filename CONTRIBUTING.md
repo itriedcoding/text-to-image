@@ -9,7 +9,7 @@ We're thrilled you're interested in contributing to Gemini AI ImageCrafter! Your
 Thereutable ways to contribute to this project:
 
 1.  **Report Bugs:** If you find a bug, please open an issue on GitHub.
-2.  **Suggest Features:** Have an idea for a new feature or improvement? Open an issue to discuss it.
+2.  **Suggest Features:** Have an idea for a new feature or improvement? Open an issue to discuss it. This could include enhancements to image generation, the new editing capabilities, or PWA functionality.
 3.  **Submit Code:** Want to contribute code directly? Follow the guidelines below for submitting pull requests.
 
 ---
@@ -73,7 +73,8 @@ Ready to dive into the code? Here's how to get started:
     ```
     (Replace `"YOUR_GEMINI_API_KEY"` with your actual key.)
 
-5.  **Run the Application:** As this is a client-side ES module application, you can serve it with a static server:
+5.  **Run the Application:** This application is designed to run in a browser environment that automatically transpiles and resolves ES modules, as demonstrated by the `index.html`'s `type="module"` script and `importmap`. It also functions as a Progressive Web App (PWA), supporting offline capabilities and desktop installation.
+    You can serve it with a static server:
     ```bash
     npx serve .
     # or http-server . if you have it installed globally
@@ -118,12 +119,14 @@ We follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0
 **Format:** `<type>(<scope>): <description>`
 
 *   **type:** `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, `perf`, `build`, `ci`
-*   **scope (optional):** Component, page, or area affected (e.g., `generatePage`, `navbar`, `geminiService`).
+*   **scope (optional):** Component, page, or area affected (e.g., `generatePage`, `navbar`, `geminiService`, `pwa`, `imageEditing`).
 *   **description:** A concise summary of the change.
 
 **Examples:**
 
 *   `feat(generatePage): Add advanced prompt builder`
+*   `feat(imageEditing): Implement image editing functionality`
+*   `feat(pwa): Add manifest and service worker for desktop installability`
 *   `fix(imageCard): Resolve download button alignment`
 *   `docs: Update README with API key instructions`
 *   `refactor(ui): Improve Button component styling`
