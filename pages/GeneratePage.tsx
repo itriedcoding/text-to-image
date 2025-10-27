@@ -1,10 +1,10 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { generateImagesWithGemini, editImageWithGemini } from '../services/geminiService';
-import { GeneratedImage, ImageAspectRatio } from '../types';
+import { generateImagesWithGemini, editImageWithGemini } from '@/services/geminiService.ts';
+import { GeneratedImage, ImageAspectRatio } from '@/types.ts';
 import { IMAGE_HISTORY_STORAGE_KEY, DEFAULT_PROMPT, DEFAULT_NUMBER_OF_IMAGES, DEFAULT_ASPECT_RATIO, MAX_IMAGES_TO_GENERATE } from '../constants';
-import LoadingSpinner from '../components/LoadingSpinner';
-import ImageCard from '../components/ImageCard';
+import LoadingSpinner from '@/components/LoadingSpinner.tsx';
+import ImageCard from '@/components/ImageCard.tsx';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter, CardDescription } from '../components/ui/card';
 import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
@@ -13,8 +13,8 @@ import { Select } from '../components/ui/select';
 import { Button } from '../components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '../components/ui/alert';
 import { PROMPT_CATEGORIES } from '../promptSuggestions';
-import { cn } from '../utils/cn';
-import PromptVisualizer from '../components/PromptVisualizer';
+import { cn } from '@/utils/cn.ts';
+import PromptVisualizer from '@/components/PromptVisualizer.tsx';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 const GeneratePage: React.FC = () => {

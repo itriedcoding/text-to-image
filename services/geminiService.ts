@@ -1,5 +1,5 @@
 import { GoogleGenAI, Modality } from "@google/genai";
-import { GenerateImageConfig, EditedImageConfig } from '../types';
+import { GenerateImageConfig, EditedImageConfig } from '@/types.ts';
 
 /**
  * Generates images using the Gemini `imagen-4.0-generate-001` model.

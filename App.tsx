@@ -1,14 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { HashRouter as Router, Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
-import Footer from './components/Footer'; // Import Footer with correct relative path
+import Footer from '@/components/Footer.tsx'; // Import Footer with correct alias and explicit extension
 import HomePage from './pages/HomePage';
 import GeneratePage from './pages/GeneratePage';
 import HistoryPage from './pages/HistoryPage';
-import AuthPage from './AuthPage'; // Import AuthPage
-import TermsOfServicePage from './TermsOfServicePage'; // Import TermsOfServicePage
-import PrivacyPolicyPage from './PrivacyPolicyPage'; // Import PrivacyPolicyPage
-import { GeneratedImage } from './types';
+// Fix: Correct the import path to reference AuthPage from the 'pages' directory
+import AuthPage from './pages/AuthPage';
+// Fix: Correct the import path and typo to reference TermsOfServicePage from the 'pages' directory
+import TermsOfServicePage from './pages/TermsOfServicePage';
+// Fix: Correct the import path to reference PrivacyPolicyPage from the 'pages' directory
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import { GeneratedImage } from '@/types.ts';
 
 // Auth Guard component
 interface ProtectedRouteProps {
@@ -20,7 +23,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, isAuthenticat
   if (!isAuthenticated) {
     return <Navigate to="/auth" replace />;
   }
-  return <>{children}</>;
+  return <>{children}</ProtectedRoute>;
 };
 
 const App: React.FC = () => {

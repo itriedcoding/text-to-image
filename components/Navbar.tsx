@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from './ui/button';
-import { cn } from '../utils/cn';
+import { cn } from '@/utils/cn.ts';
 
 interface NavbarProps {
   isAuthenticated: boolean;

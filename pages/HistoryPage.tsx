@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { GeneratedImage } from '../types';
+import { GeneratedImage } from '@/types.ts';
 import { IMAGE_HISTORY_STORAGE_KEY } from '../constants';
-import ImageCard from '../components/ImageCard';
+import ImageCard from '@/components/ImageCard.tsx';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { useNavigate } from 'react-router-dom';

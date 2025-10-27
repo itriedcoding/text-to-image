@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { GeneratedImage } from '../types';
+import { GeneratedImage } from '@/types.ts';
 import { Button } from './ui/button'; // Import the new Button component
 import { Card, CardContent, CardFooter } from './ui/card'; // Import Card components
-import { cn } from '../utils/cn';
+import { cn } from '@/utils/cn.ts';
 
 interface ImageCardProps {
   image: GeneratedImage;
